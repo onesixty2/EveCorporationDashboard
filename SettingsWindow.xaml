@@ -1,0 +1,92 @@
+<Window x:Class="EveCorporationDashboard.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Width="620" SizeToContent="Height" WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource ThWindowBg}"
+        TextElement.Foreground="{DynamicResource ThText}"
+        TextElement.FontFamily="{DynamicResource AppFont}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="14">
+        <TextBlock FontWeight="Bold" Text="EVE SSO application"/>
+        <TextBlock Margin="0,2,0,4">
+            <Hyperlink NavigateUri="https://developers.eveonline.com/applications"
+                       RequestNavigate="Link_RequestNavigate">https://developers.eveonline.com/applications</Hyperlink>
+        </TextBlock>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Enabled Scopes:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+            <TextBlock FontFamily="Consolas" Foreground="{DynamicResource ThTextDim}"
+                       Text="esi-corporations.track_members.v1&#10;esi-universe.read_structures.v1&#10;esi-industry.read_corporation_mining.v1&#10;esi-assets.read_corporation_assets.v1&#10;esi-corporations.read_structures.v1&#10;esi-corporations.read_starbases.v1"/>
+        </StackPanel>
+
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,6" Foreground="{DynamicResource ThTextDim}"
+                   Text="The callback URL must match the one registered on the EVE application exactly, trailing slash included."/>
+
+        <Grid Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Client ID:" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="ClientIdBox" Margin="0,2"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Callback URL:" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="1" Grid.Column="1" x:Name="CallbackUrlBox" Margin="0,2"/>
+        </Grid>
+
+        <TextBlock FontWeight="Bold" Text="Activity thresholds" Margin="0,6,0,4"/>
+        <Grid Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                       Text="Days without an EVE login before counting as away:"/>
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="InactiveDaysBox" Width="70" HorizontalAlignment="Left" Margin="0,2"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                       Text="Paps (30d) at or below this = Low Participation:"/>
+            <TextBox Grid.Row="1" Grid.Column="1" x:Name="MinPapsBox" Width="70" HorizontalAlignment="Left" Margin="0,2"/>
+        </Grid>
+
+        <TextBlock FontWeight="Bold" Text="Corp Director ESI" Margin="0,6,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <Button x:Name="LoginButton" Content="Log in with EVE" Width="120" Margin="0,0,8,0"
+                    Click="Login_Click"/>
+            <Button x:Name="ForgetLoginButton" Content="Forget login" Width="110" Click="ForgetLogin_Click"/>
+        </StackPanel>
+        <TextBlock x:Name="LoginInfoText" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+        <TextBlock FontWeight="Bold" Text="Paps Auth Group" Margin="0,6,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <Button Content="Auth Groups" Width="120" Margin="0,0,8,0" Click="AuthGroups_Click"
+                    ToolTip="Opens the manager's auth group list page in your browser"/>
+            <Button Content="Import group from clipboard" Width="190" Click="ImportGroup_Click"
+                    ToolTip="Reads the copied auth group list page and captures your member corp's paps group URL"/>
+        </StackPanel>
+        <TextBlock x:Name="PapsGroupText" Foreground="{DynamicResource ThTextDim}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+        <TextBlock FontWeight="Bold" Text="Stored data" Margin="0,6,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Delete all data" Width="170" Click="DeleteImported_Click"/>
+            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{DynamicResource ThTextDim}" TextWrapping="Wrap"
+                       Text="Clean slate: removes all data except director character."/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Save &amp; Close" Width="100" Margin="0,0,8,0" Click="Save_Click" IsDefault="True"/>
+            <Button Content="Cancel" Width="90" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Window>

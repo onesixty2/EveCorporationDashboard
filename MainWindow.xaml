@@ -1,0 +1,281 @@
+<Window x:Class="EveCorporationDashboard.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Eve Corporation Dashboard" Height="900" Width="1010"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize"
+        Background="{DynamicResource ThWindowBg}"
+        TextElement.Foreground="{DynamicResource ThText}"
+        TextElement.FontFamily="{DynamicResource AppFont}">
+    <Window.Resources>
+        <Style x:Key="CenterCell" TargetType="TextBlock">
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="StatusRowStyle" TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="AWOL">
+                    <Setter Property="Background" Value="{DynamicResource StAwol}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="AFK - LOA">
+                    <Setter Property="Background" Value="{DynamicResource StLoa}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="AFK - Vacationer">
+                    <Setter Property="Background" Value="{DynamicResource StLoa}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Low Participation">
+                    <Setter Property="Background" Value="{DynamicResource StLow}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="No Participation">
+                    <Setter Property="Background" Value="{DynamicResource StNoPart}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Inactive">
+                    <Setter Property="Background" Value="{DynamicResource StInactive}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="AFK">
+                    <Setter Property="Background" Value="{DynamicResource StAfk}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Active">
+                    <Setter Property="Background" Value="{DynamicResource StActive}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Unmapped character">
+                    <Setter Property="Background" Value="{DynamicResource StUnmapped}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Padding="8,5" Background="{DynamicResource ThPanelBg}">
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="Import Activity" FontSize="11" Foreground="{DynamicResource ThTextDim}" Margin="2,0,0,2"/>
+                    <Button Content="Paps" Padding="14,4" Click="ImportPaps_Click"/>
+                    <TextBlock x:Name="PapsLastImportText" FontSize="10" Foreground="{DynamicResource ThTextDim}" Margin="2,1,0,0"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock x:Name="PilotMapCaption" Text="Character &amp; Account" FontSize="11"
+                               Foreground="{DynamicResource ThTextDim}" Margin="2,0,0,2"/>
+                    <Button Content="Pilot Map" Padding="14,4" Click="ImportMappings_Click"/>
+                    <TextBlock x:Name="MapLastImportText" FontSize="10" Foreground="{DynamicResource ThTextDim}" Margin="2,1,0,0"/>
+                </StackPanel>
+                <Border Width="1" Background="{DynamicResource ThGridLine}" Margin="4,2,14,2"/>
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="EVE Online (ESI)" FontSize="11" Foreground="{DynamicResource ThTextDim}" Margin="2,0,0,2"/>
+                    <Button x:Name="RefreshButton" Content="Refresh ESI data" Padding="10,4"
+                            Click="RefreshEsi_Click"/>
+                    <TextBlock x:Name="EsiLastRefreshText" FontSize="10" Foreground="{DynamicResource ThTextDim}" Margin="2,1,0,0"/>
+                </StackPanel>
+                <Border Width="1" Background="{DynamicResource ThGridLine}" Margin="4,2,14,2"/>
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="Search &amp; filter" FontSize="11" Foreground="{DynamicResource ThTextDim}" Margin="2,0,0,2"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox x:Name="SearchBox" Width="110" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 TextChanged="Filter_Changed"/>
+                        <ComboBox x:Name="StatusFilterBox" Width="150" VerticalAlignment="Center"
+                                  SelectionChanged="Filter_Changed"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="Settings" Padding="10,4" VerticalAlignment="Bottom" Margin="4,0,0,0"
+                        Click="Settings_Click"/>
+                <Button x:Name="ThemeButton" Width="40" FontSize="14" Padding="0,4"
+                        VerticalAlignment="Bottom" Margin="6,0,0,0" Click="ThemeToggle_Click"
+                        ToolTip="Toggle dark mode"/>
+                <Slider x:Name="ScaleSlider" Width="110" Minimum="1.0" Maximum="2.0"
+                        TickFrequency="0.1" IsSnapToTickEnabled="True"
+                        VerticalAlignment="Bottom" Margin="10,0,0,6"
+                        ValueChanged="ScaleSlider_ValueChanged" ToolTip="UI scale (100% - 200%)"/>
+                <TextBlock x:Name="ScaleText" FontSize="11" Foreground="{DynamicResource ThTextDim}"
+                           VerticalAlignment="Bottom" Margin="6,0,0,7"/>
+            </StackPanel>
+        </Border>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem Grid.Column="0">
+                <TextBlock x:Name="StatusText" Text="Ready"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1" HorizontalAlignment="Right">
+                <TextBlock x:Name="TotalsText" Margin="0,0,6,0"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <TabControl x:Name="MainTabs" Margin="6">
+            <TabItem Header="Overview">
+                <DataGrid x:Name="OverviewGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" RowStyle="{StaticResource StatusRowStyle}"
+                          RowDetailsVisibilityMode="VisibleWhenSelected" SelectionMode="Single"
+                          PreviewMouseLeftButtonDown="OverviewGrid_PreviewMouseLeftButtonDown"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                          HorizontalScrollBarVisibility="Disabled"
+                          IsSynchronizedWithCurrentItem="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
+                        <DataGridTextColumn Header="💀" Binding="{Binding PapsRiskDisplay}"
+                                            SortMemberPath="PapsRisk" Width="Auto">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                    <Setter Property="ToolTip"
+                                            Value="Seen on EVE / forums / jabber / mumble within 30 days, but zero paps"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Forum name" Binding="{Binding ForumName}" Width="Auto"/>
+                        <DataGridTextColumn Header="Chars" Binding="{Binding CharacterCount}" Width="Auto"
+                                            ElementStyle="{StaticResource CenterCell}"/>
+                        <DataGridTextColumn Header="90d" Binding="{Binding Paps90}" Width="Auto"
+                                            ElementStyle="{StaticResource CenterCell}"/>
+                        <DataGridTextColumn Header="60d" Binding="{Binding Paps60}" Width="Auto"
+                                            ElementStyle="{StaticResource CenterCell}"/>
+                        <DataGridTextColumn Header="30d" Binding="{Binding Paps30}" Width="Auto"
+                                            ElementStyle="{StaticResource CenterCell}"/>
+                        <DataGridTextColumn Header="Mine" Binding="{Binding Mined30Display}"
+                                            SortMemberPath="MinedLast30" Width="Auto">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                    <!-- Always black so the badges stand out against colored rows in both themes. -->
+                                    <Setter Property="Foreground" Value="Black"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Last EVE login" Binding="{Binding LastEveDisplay}"
+                                            SortMemberPath="LastEve" Width="Auto"/>
+                        <DataGridTextColumn Header="Last forums" Binding="{Binding LastForumDisplay}"
+                                            SortMemberPath="LastForum" Width="Auto"/>
+                        <DataGridTextColumn Header="Last jabber" Binding="{Binding LastJabberDisplay}"
+                                            SortMemberPath="LastJabber" Width="Auto"/>
+                        <DataGridTextColumn Header="Last mumble" Binding="{Binding LastMumbleDisplay}"
+                                            SortMemberPath="LastMumble" Width="*"/>
+                    </DataGrid.Columns>
+                    <DataGrid.RowDetailsTemplate>
+                        <DataTemplate>
+                          <StackPanel>
+                            <TextBlock Margin="150,6,10,2" FontStyle="Italic"
+                                       Foreground="{DynamicResource ThText}">
+                                <Run Text="Seen anywhere: "/><Run Text="{Binding LastAnywhereDisplay, Mode=OneWay}"/>
+                            </TextBlock>
+                            <DataGrid ItemsSource="{Binding Characters}" AutoGenerateColumns="False"
+                                      IsReadOnly="True" CanUserAddRows="False" Margin="30,2,10,8"
+                                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Character" Binding="{Binding CharacterName}" Width="Auto"/>
+                                    <DataGridTextColumn Header="Corporation" Binding="{Binding Corp}" Width="Auto"/>
+                                    <DataGridTextColumn Header="Last login" Binding="{Binding LogonDate, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="Auto"/>
+                                    <DataGridTextColumn Header="Last logoff" Binding="{Binding LogoffDate, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="Auto"/>
+                                    <DataGridTextColumn Header="Joined corp" Binding="{Binding StartDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="Auto"/>
+                                    <DataGridTextColumn Header="Current ship" Binding="{Binding ShipType}" Width="Auto"/>
+                                    <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="Auto"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                          </StackPanel>
+                        </DataTemplate>
+                    </DataGrid.RowDetailsTemplate>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="Mining Ledger">
+                <DockPanel Margin="4">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,6">
+                        <TextBlock Text="Frack:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox x:Name="FrackCombo" Width="480" DisplayMemberPath="Display"
+                                  SelectionChanged="FrackCombo_SelectionChanged"/>
+                        <Button Content="Export to clipboard" Padding="8,3" Margin="10,0,0,0"
+                                Click="ExportMining_Click"
+                                ToolTip="Copies a Discord-ready 'Total owed' summary per account for this frack"/>
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Top" x:Name="LegendPanel" Orientation="Horizontal"
+                                Margin="0,0,0,4"/>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollViewer Grid.Column="0" Height="400" MaxWidth="620"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="ChartPanel" Orientation="Horizontal"/>
+                        </ScrollViewer>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top">
+                            <TextBlock Text="Ore composition" FontWeight="Bold" Margin="0,0,0,6"
+                                       HorizontalAlignment="Center"/>
+                            <Canvas x:Name="PieCanvas" Width="230" Height="230"/>
+                            <StackPanel x:Name="PieLegendPanel" Margin="0,10,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Top">
+                            <TextBlock Text="Share by account" FontWeight="Bold" Margin="0,0,0,6"
+                                       HorizontalAlignment="Center"/>
+                            <Canvas x:Name="AccountPieCanvas" Width="230" Height="230"/>
+                            <StackPanel x:Name="AccountPieLegendPanel" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock DockPanel.Dock="Top" x:Name="MiningInfoText" Margin="2,0,0,6"
+                               TextWrapping="Wrap" Foreground="{DynamicResource ThTextDim}"/>
+                    <DataGrid x:Name="MiningGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsUnmapped}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource StAwol}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Forum account" Binding="{Binding Account}" Width="Auto"/>
+                            <DataGridTextColumn Header="Corporation" Binding="{Binding Corp}" Width="Auto"/>
+                            <DataGridTextColumn Header="Ore type" Binding="{Binding Ore}" Width="Auto"/>
+                            <DataGridTextColumn Header="Quantity mined" Binding="{Binding Quantity, StringFormat=N0}" Width="Auto"/>
+                            <DataGridTextColumn Header="15% owed" Binding="{Binding Tax, StringFormat=N0}" Width="Auto"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="Citadel Fuel">
+                <DockPanel Margin="4">
+                    <TextBlock DockPanel.Dock="Top" x:Name="FuelInfoText" Foreground="{DynamicResource ThTextDim}"
+                               Margin="2,4,0,8" TextWrapping="Wrap"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="FuelList" Margin="2,0,2,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="2"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource ThGridLine}" BorderThickness="1"
+                                            CornerRadius="4" Background="{DynamicResource ThCardBg}"
+                                            Padding="10,8" Margin="0,0,8,8">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding ExpiryText}" Foreground="{Binding ExpiryBrush}"
+                                                       FontStyle="Italic" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding FuelLine}" Foreground="{DynamicResource ThTextDim}" FontSize="12"
+                                                       Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
+</Window>
+

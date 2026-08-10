@@ -1,0 +1,44 @@
+<Window x:Class="EveCorporationDashboard.ImportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Import from clipboard" Width="660" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="{DynamicResource ThWindowBg}"
+        TextElement.Foreground="{DynamicResource ThText}"
+        TextElement.FontFamily="{DynamicResource AppFont}">
+    <StackPanel Margin="12">
+        <StackPanel x:Name="CheckCorpsPanel" Orientation="Horizontal" Margin="0,0,0,10"
+                    Visibility="Collapsed">
+            <Button x:Name="SyncCorpsButton" Content="Corps" Padding="16,4" Margin="0,0,10,0"
+                    FontWeight="SemiBold" Click="SyncCorps_Click"
+                    ToolTip="Syncs the copied corp list page into the member/alt corps below"/>
+            <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ThTextDim}">
+                <Run Text="Open "/><Hyperlink NavigateUri="https://manager.goonfleet.com/corporation"
+                        RequestNavigate="CorpListLink_RequestNavigate">the corp list page</Hyperlink><Run
+                        Text=", press Ctrl+A then Ctrl+C, then click 'Corps' to sync."/>
+            </TextBlock>
+        </StackPanel>
+
+        <WrapPanel x:Name="LinksPanel" Margin="0,0,0,10"/>
+
+        <TextBlock x:Name="InstructionsText" TextWrapping="Wrap" Margin="0,0,0,10"
+                   Foreground="{DynamicResource ThTextDim}"
+                   Text="Open the page above, press Ctrl+A then Ctrl+C, then click 'Import from clipboard'."/>
+
+        <StackPanel Orientation="Horizontal">
+            <Button Content="Import from clipboard" Padding="14,5" FontWeight="SemiBold"
+                    Click="Import_Click"/>
+            <TextBlock x:Name="ImportStatusText" VerticalAlignment="Center" Margin="12,0,0,0"
+                       FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="420"/>
+        </StackPanel>
+
+        <TextBlock x:Name="ImportModeText" FontSize="11" Margin="0,6,0,0"
+                   Foreground="{DynamicResource ThTextDim}"
+                   Text="Importing replaces all previously imported data of this type."/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Close" Width="90" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
