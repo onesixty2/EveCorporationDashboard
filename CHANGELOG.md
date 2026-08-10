@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Next release zip should bundle Assets/OFL.txt (SIL Open Font License for the embedded
+  Oxanium font) alongside the exe.
+
 ## v1.1 (2026-08-08)
 
 Accessibility and polish release.
