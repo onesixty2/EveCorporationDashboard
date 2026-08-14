@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.2 (2026-08-14)
+
+Setup release: logging in no longer requires registering your own EVE application.
+
 ### Changed
 - EVE SSO is now handled by the application itself. The app ships with its own registered
   EVE application (a public PKCE client, so no client secret is involved and the Client ID
@@ -15,7 +19,7 @@
   working; the stale fields are ignored on load.
 
 ### Notes
-- Next release zip should bundle Assets/OFL.txt (SIL Open Font License for the embedded
+- The release zip now bundles Assets/OFL.txt (SIL Open Font License for the embedded
   Oxanium font) alongside the exe.
 
 ## v1.1 (2026-08-08)
