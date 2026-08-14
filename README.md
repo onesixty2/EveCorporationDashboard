@@ -1,4 +1,4 @@
-# EVE Member Tracker
+# EVE Member Tracker, vibed into reality
 
 WPF desktop app for corp member participation, mining tax, and citadel fuel. It combines
 ESI data with pages copied from the goonfleet manager into one view:
