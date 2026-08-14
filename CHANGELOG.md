@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Changed
+- EVE SSO is now handled by the application itself. The app ships with its own registered
+  EVE application (a public PKCE client, so no client secret is involved and the Client ID
+  is safe to distribute), and users just click "Log in with EVE".
+- Setup no longer requires registering an application at developers.eveonline.com or
+  configuring a callback URL. The Client ID and Callback URL fields are gone from Settings,
+  along with the registration link and scope list that went with them.
+
+### Removed
+- `AppSettings.ClientId` and `AppSettings.CallbackUrl`. Existing settings.json files keep
+  working; the stale fields are ignored on load.
+
+### Notes
 - Next release zip should bundle Assets/OFL.txt (SIL Open Font License for the embedded
   Oxanium font) alongside the exe.
 

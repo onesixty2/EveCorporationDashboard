@@ -40,25 +40,25 @@ Thresholds are configurable in Settings. Light/dark theme toggles from the toolb
 
 ## One-time setup
 
-1. Register an "Authentication & API Access" application at
-   <https://developers.eveonline.com/applications> with callback URL
-   `http://localhost:53411/callback/` and these scopes:
-   - `esi-corporations.track_members.v1`
-   - `esi-universe.read_structures.v1`
-   - `esi-industry.read_corporation_mining.v1`
-   - `esi-assets.read_corporation_assets.v1`
-   - `esi-corporations.read_structures.v1`
-   - `esi-corporations.read_starbases.v1`
-2. In Settings: paste the Client ID, then **Log in with EVE** using a character with the
-   **Director** role (mining also wants Accountant, fuel expiry Station Manager - Director
-   covers all of it).
-3. In Settings: click **Auth Groups**, Ctrl+A / Ctrl+C on that page, then
+1. In Settings: **Log in with EVE** using a character with the **Director** role (mining
+   also wants Accountant, fuel expiry Station Manager - Director covers all of it). No
+   registration or Client ID needed - the app ships with its own EVE SSO application.
+2. In Settings: click **Auth Groups**, Ctrl+A / Ctrl+C on that page, then
    **Import group from clipboard** to capture the member corp's paps group.
-4. In the **Pilot Map** window: click **Corps**, copy the manager's corp list page, and
+3. In the **Pilot Map** window: click **Corps**, copy the manager's corp list page, and
    apply to build the corp list. Then for each corp: click its link, Ctrl+A / Ctrl+C on
    the page, and **Import from clipboard**.
-5. **Refresh ESI data**, then **Paps** import. Repeat imports roughly every 90 days
+4. **Refresh ESI data**, then **Paps** import. Repeat imports roughly every 90 days
    (the toolbar warns when the pilot map goes stale).
+
+## For maintainers/forks
+
+The app authenticates via EVE SSO's PKCE flow for native apps - there is no client
+secret anywhere, so the Client ID in [`Services/EsiConfig.cs`](Services/EsiConfig.cs) is
+safe to commit and is shared by every install. If you fork this project, register your
+own "Authentication & API Access" application at
+<https://developers.eveonline.com/applications> with the scopes and the loopback callback
+URL listed in that file (trailing slash included), then swap in your own Client ID.
 
 ## Data & privacy
 

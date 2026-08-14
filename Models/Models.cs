@@ -2,12 +2,6 @@ namespace EveCorporationDashboard.Models;
 
 public class AppSettings
 {
-    /// <summary>Client ID of the EVE application registered at developers.eveonline.com.</summary>
-    public string ClientId { get; set; } = "";
-
-    /// <summary>Must exactly match the callback URL registered on the EVE application, trailing slash included.</summary>
-    public string CallbackUrl { get; set; } = "http://localhost:53411/callback/";
-
     /// <summary>Days without an EVE login before a member counts as away/inactive.</summary>
     public int InactiveDaysThreshold { get; set; } = 30;
 

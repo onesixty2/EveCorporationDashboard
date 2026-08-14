@@ -29,16 +29,49 @@ public class EsiAuthService
 
     private static readonly HttpClient Http = new();
 
-    public async Task<AuthResult> LoginAsync(string clientId, string redirectUri, string scopes, CancellationToken ct)
+    /// <summary>
+    /// Tries each candidate redirect URI in order, using the first whose loopback port is
+    /// free. All candidates must be registered on the EVE app so this degrades gracefully
+    /// when a user already has something bound to the primary port.
+    /// </summary>
+    public async Task<AuthResult> LoginAsync(string clientId, IReadOnlyList<string> redirectUris, string scopes,
+        CancellationToken ct)
+    {
+        for (int i = 0; i < redirectUris.Count; i++)
+        {
+            TcpListener listener;
+            try
+            {
+                listener = new TcpListener(IPAddress.Loopback, new Uri(redirectUris[i]).Port);
+                listener.Start();
+            }
+            catch (SocketException) when (i < redirectUris.Count - 1)
+            {
+                continue; // port already in use - fall back to the next registered redirect URI
+            }
+
+            try
+            {
+                return await LoginWithListenerAsync(clientId, redirectUris[i], scopes, listener, ct);
+            }
+            finally
+            {
+                listener.Stop();
+            }
+        }
+
+        throw new InvalidOperationException("No loopback port was available for the EVE SSO callback.");
+    }
+
+    private static async Task<AuthResult> LoginWithListenerAsync(string clientId, string redirectUri, string scopes,
+        TcpListener listener, CancellationToken ct)
     {
         string verifier = Base64Url(RandomNumberGenerator.GetBytes(32));
         string challenge = Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
         string state = Base64Url(RandomNumberGenerator.GetBytes(16));
 
         // The redirect URI is sent verbatim - it must byte-for-byte match the EVE app registration.
-        var callbackUri = new Uri(redirectUri);
-        int port = callbackUri.Port;
-        string callbackPath = callbackUri.AbsolutePath.TrimEnd('/');
+        string callbackPath = new Uri(redirectUri).AbsolutePath.TrimEnd('/');
 
         string url = AuthorizeUrl +
             "?response_type=code" +
@@ -49,24 +82,15 @@ public class EsiAuthService
             "&code_challenge_method=S256" +
             "&state=" + state;
 
-        var listener = new TcpListener(IPAddress.Loopback, port);
-        listener.Start();
-        try
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        string code = await WaitForCodeAsync(listener, state, callbackPath, ct);
+        return await ExchangeAsync(clientId, new Dictionary<string, string>
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            string code = await WaitForCodeAsync(listener, state, callbackPath, ct);
-            return await ExchangeAsync(clientId, new Dictionary<string, string>
-            {
-                ["grant_type"] = "authorization_code",
-                ["code"] = code,
-                ["client_id"] = clientId,
-                ["code_verifier"] = verifier,
-            });
-        }
-        finally
-        {
-            listener.Stop();
-        }
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["client_id"] = clientId,
+            ["code_verifier"] = verifier,
+        });
     }
 
     public Task<AuthResult> RefreshAsync(string clientId, string refreshToken) =>

@@ -12,11 +12,6 @@ namespace EveCorporationDashboard;
 
 public partial class MainWindow : Window
 {
-    private const string EsiScopes =
-        "esi-corporations.track_members.v1 esi-universe.read_structures.v1 esi-industry.read_corporation_mining.v1 " +
-        "esi-assets.read_corporation_assets.v1 esi-corporations.read_structures.v1 " +
-        "esi-corporations.read_starbases.v1";
-
     private const double MiningTaxRate = 0.15;
 
     private readonly AppSettings _settings;
@@ -112,13 +107,10 @@ public partial class MainWindow : Window
     /// <summary>Runs the full SSO login; invoked from the Settings window's Corp Director ESI section.</summary>
     private async Task<(bool Ok, string Message)> LoginFromSettingsAsync()
     {
-        if (string.IsNullOrWhiteSpace(_settings.ClientId))
-            return (false, "Enter a Client ID first.");
-        DataStore.SaveSettings(_settings);
         try
         {
             SetBusy(true, "Waiting for EVE SSO login in your browser…");
-            var result = await _auth.LoginAsync(_settings.ClientId, _settings.CallbackUrl, EsiScopes,
+            var result = await _auth.LoginAsync(EsiConfig.ClientId, EsiConfig.RedirectUris, EsiConfig.Scopes,
                 new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token);
             ApplyAuthResult(result);
             _settings.CorporationId = await _esi.GetCorporationIdAsync(result.CharacterId);
@@ -142,7 +134,7 @@ public partial class MainWindow : Window
 
     private async void RefreshEsi_Click(object sender, RoutedEventArgs e)
     {
-        if (!EnsureClientIdConfigured()) return;
+        if (!EnsureLoggedIn()) return;
         await RefreshEsiAsync();
     }
 
@@ -150,8 +142,7 @@ public partial class MainWindow : Window
     private void TryAutoRefreshEsi()
     {
         if (_refreshing) return;
-        if (string.IsNullOrWhiteSpace(_settings.ClientId) ||
-            string.IsNullOrEmpty(_settings.RefreshToken)) return;
+        if (string.IsNullOrEmpty(_settings.RefreshToken)) return;
         _ = RefreshEsiAsync();
     }
 
@@ -273,7 +264,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                var refreshed = await _auth.RefreshAsync(_settings.ClientId, _settings.RefreshToken);
+                var refreshed = await _auth.RefreshAsync(EsiConfig.ClientId, _settings.RefreshToken);
                 ApplyAuthResult(refreshed);
                 DataStore.SaveSettings(_settings);
                 return _accessToken;
@@ -284,7 +275,7 @@ public partial class MainWindow : Window
             }
         }
 
-        var result = await _auth.LoginAsync(_settings.ClientId, _settings.CallbackUrl, EsiScopes,
+        var result = await _auth.LoginAsync(EsiConfig.ClientId, EsiConfig.RedirectUris, EsiConfig.Scopes,
             new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token);
         ApplyAuthResult(result);
         DataStore.SaveSettings(_settings);
@@ -300,16 +291,15 @@ public partial class MainWindow : Window
         if (!string.IsNullOrEmpty(result.CharacterName)) _settings.CharacterName = result.CharacterName;
     }
 
-    private bool EnsureClientIdConfigured()
+    private bool EnsureLoggedIn()
     {
-        if (!string.IsNullOrWhiteSpace(_settings.ClientId)) return true;
+        if (!string.IsNullOrEmpty(_settings.RefreshToken)) return true;
         MessageBox.Show(this,
-            "No EVE application Client ID is configured yet.\n\n" +
-            "Settings has the registration link, the required scopes, and the callback URL - " +
-            "register the application there, then paste its Client ID into Settings.",
-            "Setup needed", MessageBoxButton.OK, MessageBoxImage.Information);
+            "Not logged in yet.\n\nOpen Settings and click \"Log in with EVE\" using a character " +
+            "with the Director role.",
+            "Login needed", MessageBoxButton.OK, MessageBoxImage.Information);
         OpenSettings();
-        return !string.IsNullOrWhiteSpace(_settings.ClientId);
+        return !string.IsNullOrEmpty(_settings.RefreshToken);
     }
 
     // ---------- Clipboard imports ----------

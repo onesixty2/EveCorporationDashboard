@@ -8,38 +8,7 @@
         TextElement.FontFamily="{DynamicResource AppFont}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="14">
-        <TextBlock FontWeight="Bold" Text="EVE SSO application"/>
-        <TextBlock Margin="0,2,0,4">
-            <Hyperlink NavigateUri="https://developers.eveonline.com/applications"
-                       RequestNavigate="Link_RequestNavigate">https://developers.eveonline.com/applications</Hyperlink>
-        </TextBlock>
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Enabled Scopes:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-            <TextBlock FontFamily="Consolas" Foreground="{DynamicResource ThTextDim}"
-                       Text="esi-corporations.track_members.v1&#10;esi-universe.read_structures.v1&#10;esi-industry.read_corporation_mining.v1&#10;esi-assets.read_corporation_assets.v1&#10;esi-corporations.read_structures.v1&#10;esi-corporations.read_starbases.v1"/>
-        </StackPanel>
-
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,6" Foreground="{DynamicResource ThTextDim}"
-                   Text="The callback URL must match the one registered on the EVE application exactly, trailing slash included."/>
-
-        <Grid Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="160"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Client ID:" VerticalAlignment="Center"/>
-            <TextBox Grid.Row="0" Grid.Column="1" x:Name="ClientIdBox" Margin="0,2"/>
-
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Callback URL:" VerticalAlignment="Center"/>
-            <TextBox Grid.Row="1" Grid.Column="1" x:Name="CallbackUrlBox" Margin="0,2"/>
-        </Grid>
-
-        <TextBlock FontWeight="Bold" Text="Activity thresholds" Margin="0,6,0,4"/>
+        <TextBlock FontWeight="Bold" Text="Activity thresholds" Margin="0,0,0,4"/>
         <Grid Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="360"/>

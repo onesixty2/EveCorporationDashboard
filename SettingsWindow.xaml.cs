@@ -24,18 +24,10 @@ public partial class SettingsWindow : Window
         _login = loginAsync;
         _deleteImportedData = deleteImportedData;
         LoginButton.IsEnabled = loginAsync != null;
-        ClientIdBox.Text = settings.ClientId;
-        CallbackUrlBox.Text = settings.CallbackUrl;
         InactiveDaysBox.Text = settings.InactiveDaysThreshold.ToString();
         MinPapsBox.Text = settings.MinPaps30.ToString(CultureInfo.InvariantCulture);
         UpdateLoginInfo();
         UpdatePapsGroupText();
-    }
-
-    private void Link_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
-    {
-        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
-        e.Handled = true;
     }
 
     private const string AuthGroupListUrl = "https://manager.goonfleet.com/auth-group";
@@ -168,7 +160,6 @@ public partial class SettingsWindow : Window
     private async void Login_Click(object sender, RoutedEventArgs e)
     {
         if (_login == null) return;
-        // Pick up any Client ID / callback URL just typed, without closing the dialog.
         if (!TryApplyFields()) return;
 
         LoginButton.IsEnabled = false;
@@ -215,16 +206,6 @@ public partial class SettingsWindow : Window
     /// <summary>Validates the input fields and writes them into the settings object.</summary>
     private bool TryApplyFields()
     {
-        string callbackUrl = CallbackUrlBox.Text.Trim();
-        if (!Uri.TryCreate(callbackUrl, UriKind.Absolute, out var uri)
-            || uri.Scheme != "http"
-            || (!uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) && uri.Host != "127.0.0.1"))
-        {
-            MessageBox.Show(this,
-                "The callback URL must be an http://localhost:<port>/... address, e.g. http://localhost:53411/callback/",
-                "Invalid callback URL", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return false;
-        }
         if (!int.TryParse(InactiveDaysBox.Text, out int days) || days < 1)
         {
             MessageBox.Show(this, "Inactive days must be a positive number.",
@@ -239,8 +220,6 @@ public partial class SettingsWindow : Window
             return false;
         }
 
-        _settings.ClientId = ClientIdBox.Text.Trim();
-        _settings.CallbackUrl = callbackUrl;
         _settings.InactiveDaysThreshold = days;
         _settings.MinPaps30 = minPaps;
         return true;
