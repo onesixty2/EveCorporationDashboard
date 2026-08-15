@@ -1042,9 +1042,13 @@ public partial class MainWindow : Window
             LegendPanel.Children.Add(item);
         }
 
+        // The table splits an account's ore per corp, so the same ore can appear on several
+        // rows for one account (alts in different corps, or a corp change mid-frack).
+        // Fold those together - the stacked bar wants one segment per ore.
         var accounts = rows.GroupBy(r => r.Account)
             .Select(g => (Account: g.Key, Total: g.Sum(r => r.Quantity),
-                          ByOre: g.ToDictionary(r => r.Ore, r => r.Quantity)))
+                          ByOre: g.GroupBy(r => r.Ore)
+                                  .ToDictionary(o => o.Key, o => o.Sum(r => r.Quantity))))
             .OrderByDescending(a => a.Total).ToList();
         double max = accounts[0].Total;
         if (max <= 0) return;

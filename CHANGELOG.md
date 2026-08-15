@@ -18,6 +18,13 @@ Setup release: logging in no longer requires registering your own EVE applicatio
 - `AppSettings.ClientId` and `AppSettings.CallbackUrl`. Existing settings.json files keep
   working; the stale fields are ignored on load.
 
+### Fixed
+- Startup crash in the mining chart when one account had the same ore under more than one
+  corp (an alt in another corp, or a corp change mid-frack). The chart built a per-ore
+  lookup that assumed one row per ore, so the duplicate threw. Because the chart is built
+  from the main window's constructor, this made the app unopenable once such data was
+  saved. The rows are now folded together per ore.
+
 ### Notes
 - The release zip now bundles Assets/OFL.txt (SIL Open Font License for the embedded
   Oxanium font) alongside the exe.
