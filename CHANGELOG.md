@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v1.2.1 (2026-08-15)
+
+Hotfix for a startup crash in v1.2.
+
+### Fixed
+- Startup crash in the mining chart when one account had the same ore under more than one
+  corp (an alt in another corp, or a corp change mid-frack). The chart built a per-ore
+  lookup that assumed one row per ore, so the duplicate threw. Because the chart is built
+  from the main window's constructor, this made the app unopenable once an ESI refresh had
+  saved data in that shape - reinstalling did not help, since the data lives in %APPDATA%.
+  The rows are now folded together per ore.
+
 ## v1.2 (2026-08-14)
 
 Setup release: logging in no longer requires registering your own EVE application.
@@ -17,13 +29,6 @@ Setup release: logging in no longer requires registering your own EVE applicatio
 ### Removed
 - `AppSettings.ClientId` and `AppSettings.CallbackUrl`. Existing settings.json files keep
   working; the stale fields are ignored on load.
-
-### Fixed
-- Startup crash in the mining chart when one account had the same ore under more than one
-  corp (an alt in another corp, or a corp change mid-frack). The chart built a per-ore
-  lookup that assumed one row per ore, so the duplicate threw. Because the chart is built
-  from the main window's constructor, this made the app unopenable once such data was
-  saved. The rows are now folded together per ore.
 
 ### Notes
 - The release zip now bundles Assets/OFL.txt (SIL Open Font License for the embedded
