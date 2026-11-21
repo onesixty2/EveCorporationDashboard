@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.4 (2026-11-21)
+
+Pilot map release: corp imports now retire people who have left.
+
 ### Fixed
 - Pilot map imports never removed anyone, so a character who left the corp stayed in the
   map forever and kept appearing in reports. Each mapping now records the corp page it
