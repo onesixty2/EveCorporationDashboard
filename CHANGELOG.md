@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Changed
+- The main window is freely resizable (it was fixed at 1010x900 with only a minimize box)
+  and remembers its size, position, and maximized state across relaunches. A saved
+  placement that no longer lands on a connected monitor is discarded rather than restored
+  off-screen. Minimum size is 900x560.
+- Default window width raised from 1010 to 1180 so the mining charts fit out of the box.
+- The mining bar chart now takes the window's spare width instead of being capped at 620px
+  with the leftover space going to an empty filler column. With a larger roster, widening
+  the window shows more accounts; the ore and account pies keep their size on the right.
+
+### Fixed
+- "Share by account" pie was clipped off the right edge of the mining tab. The chart row
+  needed 1112px inside a 1010px window, so the third column had nowhere to go.
+- The UI scale slider no longer forces the window back to a computed size, which would
+  have overwritten a size the user set by dragging the frame. It still grows the window to
+  fit zoomed content, but only ever grows it.
+
 ## v1.2.1 (2026-08-15)
 
 Hotfix for a startup crash in v1.2.

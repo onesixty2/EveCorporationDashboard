@@ -45,6 +45,8 @@ public partial class MainWindow : Window
         _initializingScale = false;
         ScaleText.Text = $"{AppUi.Scale:P0}";
         ApplyMainScale();
+        RestoreWindowGeometry();
+        Closing += (_, _) => SaveWindowGeometry();
         ApplyCorpIcon();
         UpdateWindowTitle();
         if (_settings.CorporationId != 0 && string.IsNullOrEmpty(_settings.CorporationTicker))
@@ -661,25 +663,80 @@ public partial class MainWindow : Window
         AppUi.Scale = _settings.UiScale;
         DataStore.SaveSettings(_settings);
         ApplyMainScale();
+        GrowWindowForScale();
     }
 
-    private const double BaseWindowWidth = 1010;
+    private const double BaseWindowWidth = 1180;
     private const double BaseWindowHeight = 900;
 
     /// <summary>
     /// Scales only the tab content, leaving the toolbar (and the slider itself) fixed so
-    /// the controls never shift under the cursor while dragging. The window grows with the
-    /// scale (capped to the screen's working area) instead of relying on scrollbars.
+    /// the controls never shift under the cursor while dragging. The window itself is the
+    /// user's to size - see GrowWindowForScale for the one case where we nudge it.
     /// </summary>
     private void ApplyMainScale()
     {
         MainTabs.LayoutTransform = Math.Abs(AppUi.Scale - 1.0) < 0.01
             ? null
             : new ScaleTransform(AppUi.Scale, AppUi.Scale);
+    }
 
+    /// <summary>
+    /// After the user drags the scale slider, widen/heighten the window so the zoomed
+    /// content still fits - capped to the screen's working area. This only ever grows the
+    /// window, so a size the user chose by dragging the frame is never taken away.
+    /// </summary>
+    private void GrowWindowForScale()
+    {
+        if (WindowState != WindowState.Normal) return;
         var workArea = SystemParameters.WorkArea;
-        Width = Math.Min(BaseWindowWidth * AppUi.Scale, workArea.Width);
-        Height = Math.Min(BaseWindowHeight * AppUi.Scale, workArea.Height);
+        Width = Math.Max(Width, Math.Min(BaseWindowWidth * AppUi.Scale, workArea.Width));
+        Height = Math.Max(Height, Math.Min(BaseWindowHeight * AppUi.Scale, workArea.Height));
+    }
+
+    /// <summary>
+    /// Puts the window back where it was last session. A saved rect that no longer lands on
+    /// a connected monitor is ignored, so unplugging a second screen can't strand the window
+    /// off-screen where it cannot be dragged back.
+    /// </summary>
+    private void RestoreWindowGeometry()
+    {
+        if (_settings.WindowWidth is not > 0 || _settings.WindowHeight is not > 0 ||
+            _settings.WindowLeft is not { } left || _settings.WindowTop is not { } top)
+            return;
+
+        double width = Math.Max(MinWidth, _settings.WindowWidth.Value);
+        double height = Math.Max(MinHeight, _settings.WindowHeight.Value);
+
+        // Require a decent sliver of the title bar to be reachable on the virtual desktop.
+        var saved = new Rect(left, top, width, height);
+        var desktop = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
+            SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
+        var visible = Rect.Intersect(saved, desktop);
+        if (visible.IsEmpty || visible.Width < 120 || visible.Height < 60) return;
+
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        Left = left;
+        Top = top;
+        Width = width;
+        Height = height;
+        if (_settings.WindowMaximized) WindowState = WindowState.Maximized;
+    }
+
+    private void SaveWindowGeometry()
+    {
+        // RestoreBounds holds the pre-maximize rect, which is what we want to come back to.
+        var bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, Width, Height)
+            : RestoreBounds;
+        if (bounds.IsEmpty || double.IsNaN(bounds.Width) || bounds.Width <= 0) return;
+
+        _settings.WindowLeft = bounds.Left;
+        _settings.WindowTop = bounds.Top;
+        _settings.WindowWidth = bounds.Width;
+        _settings.WindowHeight = bounds.Height;
+        _settings.WindowMaximized = WindowState == WindowState.Maximized;
+        DataStore.SaveSettings(_settings);
     }
 
 

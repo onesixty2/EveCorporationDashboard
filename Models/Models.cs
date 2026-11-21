@@ -13,6 +13,17 @@ public class AppSettings
     /// <summary>UI zoom factor (0.8 to 1.6).</summary>
     public double UiScale { get; set; } = 1.0;
 
+    /// <summary>
+    /// Main window placement from the last session, restored on launch. Null until the
+    /// window has been closed once; a saved rect that no longer lands on any connected
+    /// monitor is discarded rather than restored off-screen.
+    /// </summary>
+    public double? WindowLeft { get; set; }
+    public double? WindowTop { get; set; }
+    public double? WindowWidth { get; set; }
+    public double? WindowHeight { get; set; }
+    public bool WindowMaximized { get; set; }
+
     public string? RefreshToken { get; set; }
     public long CharacterId { get; set; }
     public string? CharacterName { get; set; }
