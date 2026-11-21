@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.3 (2026-11-21)
+
+Window sizing release: the dashboard fits a larger roster.
+
 ### Changed
 - The main window is freely resizable (it was fixed at 1010x900 with only a minimize box)
   and remembers its size, position, and maximized state across relaunches. A saved
