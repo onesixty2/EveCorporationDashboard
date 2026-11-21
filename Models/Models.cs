@@ -72,6 +72,13 @@ public class CharacterMapping
 {
     public string CharacterName { get; set; } = "";
     public string ForumName { get; set; } = "";
+    /// <summary>
+    /// Corp source page this character came from (the CorpSource.Label). Re-importing that
+    /// page replaces every mapping carrying its label, so people who left the corp drop out
+    /// instead of lingering. Null on rows imported before source tracking existed, and on
+    /// free clipboard imports made without picking a corp - those are never auto-removed.
+    /// </summary>
+    public string? SourceLabel { get; set; }
     // Optional extras captured from the corp characters page - used as fallback where ESI
     // tracking data isn't available (alt corp characters).
     public DateTime? LastOnline { get; set; }

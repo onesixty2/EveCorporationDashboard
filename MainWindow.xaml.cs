@@ -510,8 +510,8 @@ public partial class MainWindow : Window
                 string.Equals(m.ForumName, label, StringComparison.OrdinalIgnoreCase)),
             instructions: "Click a corp above, press Ctrl+A then Ctrl+C on its page, then " +
                           "'Import from clipboard'. Repeat for each corp.",
-            modeNote: "Each import merges into the existing mappings - nothing is deleted " +
-                      "unless you delete all data in Settings.")
+            modeNote: "Importing a corp replaces that corp's characters - anyone no longer " +
+                      "on its page is dropped. Other corps are left alone.")
         { Owner = this };
         var importedBefore = _data.MappingsLastImportUtc;
         dlg.ShowDialog();
@@ -543,6 +543,11 @@ public partial class MainWindow : Window
 
             if (_data.PilotMapImportDates.Remove(corp.Label, out var importedAt))
                 _data.PilotMapImportDates[forumName] = importedAt;
+            // Mappings are tagged with the source label, so they have to follow the rename
+            // or the next import of this corp would no longer recognise its own rows.
+            foreach (var m in _data.CharacterMappings)
+                if (string.Equals(m.SourceLabel, corp.Label, StringComparison.OrdinalIgnoreCase))
+                    m.SourceLabel = forumName;
             corp.Label = forumName;
             changed = true;
         }
@@ -554,44 +559,32 @@ public partial class MainWindow : Window
         return changed;
     }
 
-    /// <summary>Merges one corp's page into the mappings (upsert by character name); never deletes.</summary>
+    /// <summary>
+    /// Applies one corp's page to the mappings. When the import came from a known corp
+    /// source, that page is authoritative for the corp: every mapping previously tagged
+    /// with the same source label is cleared first, so characters that have since left the
+    /// corp disappear instead of lingering in reports forever. A free clipboard import with
+    /// no source label still merges, since there is no corp whose roster it can speak for.
+    /// </summary>
     private string ApplyMappingsImport(ImportResult result, string? sourceLabel)
     {
-        var utcNow = DateTime.UtcNow;
-        int added = 0, updated = 0;
-        foreach (var row in result.DataRows)
-        {
-            string? charName = Cell(row, result, "CharacterName")?.Trim();
-            string? forumName = Cell(row, result, "ForumName")?.Trim();
-            if (string.IsNullOrWhiteSpace(charName) || string.IsNullOrWhiteSpace(forumName)) continue;
-
-            var existing = _data.CharacterMappings.FirstOrDefault(m =>
-                string.Equals(m.CharacterName, charName, StringComparison.OrdinalIgnoreCase));
-            if (existing == null)
+        // Optional extras stay null when the column wasn't mapped, so the importer knows to
+        // leave any existing value alone rather than blanking it.
+        var rows = result.DataRows
+            .Select(row => new PilotMapRow
             {
-                existing = new CharacterMapping { CharacterName = charName };
-                _data.CharacterMappings.Add(existing);
-                added++;
-            }
-            else
-            {
-                updated++;
-            }
-            existing.ForumName = forumName;
+                CharacterName = Cell(row, result, "CharacterName")?.Trim() ?? "",
+                ForumName = Cell(row, result, "ForumName")?.Trim() ?? "",
+                LastOnlineRaw = Cell(row, result, "LastOnline"),
+                JoinedRaw = Cell(row, result, "Joined"),
+                Ship = Cell(row, result, "Ship"),
+            })
+            .ToList();
 
-            // Optional extras - only touched when the column was mapped in the import window.
-            string? lastOnlineRaw = Cell(row, result, "LastOnline");
-            if (lastOnlineRaw != null)
-                existing.LastOnline = TableParser.ParseFuzzyDate(lastOnlineRaw, utcNow);
-            string? joinedRaw = Cell(row, result, "Joined");
-            if (joinedRaw != null)
-                existing.JoinedDate = TableParser.ParseFuzzyDate(joinedRaw, utcNow);
-            string? ship = Cell(row, result, "Ship")?.Trim();
-            if (!string.IsNullOrWhiteSpace(ship))
-                existing.ShipType = ship;
-        }
+        var (added, updated, departed) =
+            PilotMapImport.Apply(_data.CharacterMappings, rows, sourceLabel, DateTime.UtcNow);
 
-        _mappingsDelta = (added, 0);
+        _mappingsDelta = (added, departed.Count);
         _data.MappingsLastImportUtc = DateTime.UtcNow;
         if (!string.IsNullOrEmpty(sourceLabel))
             _data.PilotMapImportDates[sourceLabel] = DateTime.UtcNow;
@@ -601,8 +594,21 @@ public partial class MainWindow : Window
         RebuildRows();
 
         string source = string.IsNullOrEmpty(sourceLabel) ? "clipboard" : sourceLabel;
-        StatusText.Text = $"Imported {added + updated} characters from {source} ({_data.CharacterMappings.Count} total).";
-        return $"Imported {added + updated} characters from {source} ({added} new, {updated} updated).";
+        StatusText.Text = $"Imported {added + updated} characters from {source} " +
+                          $"({_data.CharacterMappings.Count} total" +
+                          (departed.Count > 0 ? $", {departed.Count} no longer listed" : "") + ").";
+
+        string summary = $"Imported {added + updated} characters from {source} " +
+                         $"({added} new, {updated} updated).";
+        if (departed.Count > 0)
+        {
+            // Name them: a silent removal is indistinguishable from a bad import.
+            var shown = departed.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).Take(12).ToList();
+            summary += $"\n\nRemoved {departed.Count} no longer on this page:\n" +
+                       string.Join(", ", shown) +
+                       (departed.Count > shown.Count ? $", and {departed.Count - shown.Count} more" : "");
+        }
+        return summary;
     }
 
     private static string? Cell(string[] row, ImportResult result, string key)
@@ -771,7 +777,22 @@ public partial class MainWindow : Window
             _mappingsDelta = null;
             DataStore.SaveData(_data);
             RebuildRows();
-        })
+        },
+            unsourcedMappings: () => _data.CharacterMappings
+                .Where(m => string.IsNullOrEmpty(m.SourceLabel))
+                .Select(m => m.CharacterName)
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            purgeUnsourcedMappings: () =>
+            {
+                int removed = _data.CharacterMappings.RemoveAll(m => string.IsNullOrEmpty(m.SourceLabel));
+                if (removed > 0)
+                {
+                    DataStore.SaveData(_data);
+                    RebuildRows();
+                }
+                return removed;
+            })
         { Owner = this };
         if (dlg.ShowDialog() == true)
         {

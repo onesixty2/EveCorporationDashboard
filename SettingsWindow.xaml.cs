@@ -12,10 +12,14 @@ public partial class SettingsWindow : Window
     private readonly AppSettings _settings;
     private readonly Func<Task<(bool Ok, string Message)>>? _login;
     private readonly Action? _deleteImportedData;
+    private readonly Func<List<string>>? _unsourcedMappings;
+    private readonly Func<int>? _purgeUnsourcedMappings;
 
     public SettingsWindow(AppSettings settings,
         Func<Task<(bool Ok, string Message)>>? loginAsync = null,
-        Action? deleteImportedData = null)
+        Action? deleteImportedData = null,
+        Func<List<string>>? unsourcedMappings = null,
+        Func<int>? purgeUnsourcedMappings = null)
     {
         InitializeComponent();
         CorpIcon.Apply(this);
@@ -23,11 +27,50 @@ public partial class SettingsWindow : Window
         _settings = settings;
         _login = loginAsync;
         _deleteImportedData = deleteImportedData;
+        _unsourcedMappings = unsourcedMappings;
+        _purgeUnsourcedMappings = purgeUnsourcedMappings;
         LoginButton.IsEnabled = loginAsync != null;
         InactiveDaysBox.Text = settings.InactiveDaysThreshold.ToString();
         MinPapsBox.Text = settings.MinPaps30.ToString(CultureInfo.InvariantCulture);
         UpdateLoginInfo();
         UpdatePapsGroupText();
+        UpdateUnsourcedText();
+    }
+
+    /// <summary>
+    /// Mappings imported before per-corp source tracking carry no source label, so no corp
+    /// import can claim or retire them. They are the ones that keep ex-members on reports.
+    /// </summary>
+    private void UpdateUnsourcedText()
+    {
+        var stale = _unsourcedMappings?.Invoke() ?? new List<string>();
+        PurgeUnsourcedButton.IsEnabled = stale.Count > 0 && _purgeUnsourcedMappings != null;
+        UnsourcedText.Text = stale.Count == 0
+            ? "No untracked characters - every mapping belongs to a corp page."
+            : $"{stale.Count} characters came from imports made before per-corp tracking, so " +
+              "re-importing a corp cannot retire them. Re-import your corps first, then clear " +
+              "whatever is left here.";
+    }
+
+    private void PurgeUnsourced_Click(object sender, RoutedEventArgs e)
+    {
+        if (_purgeUnsourcedMappings == null) return;
+        var stale = _unsourcedMappings?.Invoke() ?? new List<string>();
+        if (stale.Count == 0) return;
+
+        var shown = stale.Take(20).ToList();
+        string names = string.Join(", ", shown) +
+                       (stale.Count > shown.Count ? $", and {stale.Count - shown.Count} more" : "");
+        if (MessageBox.Show(this,
+                $"Remove these {stale.Count} characters from the pilot map?\n\n{names}\n\n" +
+                "Anyone still in a corp comes back the next time you import that corp's page.",
+                "Clear untracked characters", MessageBoxButton.YesNo, MessageBoxImage.Warning)
+            != MessageBoxResult.Yes) return;
+
+        int removed = _purgeUnsourcedMappings();
+        UpdateUnsourcedText();
+        MessageBox.Show(this, $"Removed {removed} characters from the pilot map.",
+            "Done", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private const string AuthGroupListUrl = "https://manager.goonfleet.com/auth-group";

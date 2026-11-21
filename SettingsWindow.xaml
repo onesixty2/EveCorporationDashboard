@@ -45,6 +45,15 @@
         </StackPanel>
         <TextBlock x:Name="PapsGroupText" Foreground="{DynamicResource ThTextDim}" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
+        <TextBlock FontWeight="Bold" Text="Pilot map cleanup" Margin="0,6,0,4"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <Button x:Name="PurgeUnsourcedButton" Content="Clear untracked characters" Width="190"
+                    Click="PurgeUnsourced_Click"
+                    ToolTip="Removes pilot map entries that predate per-corp tracking and so can never be retired by a corp re-import"/>
+        </StackPanel>
+        <TextBlock x:Name="UnsourcedText" Foreground="{DynamicResource ThTextDim}"
+                   TextWrapping="Wrap" Margin="0,0,0,10"/>
+
         <TextBlock FontWeight="Bold" Text="Stored data" Margin="0,6,0,4"/>
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
             <Button Content="Delete all data" Width="170" Click="DeleteImported_Click"/>

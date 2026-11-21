@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Fixed
+- Pilot map imports never removed anyone, so a character who left the corp stayed in the
+  map forever and kept appearing in reports. Each mapping now records the corp page it
+  came from, and re-importing that page retires anyone it no longer lists. Other corps are
+  untouched, and the removed names are listed in the import result rather than vanishing
+  silently.
+
+### Added
+- Settings → Pilot map cleanup → "Clear untracked characters", for mappings imported
+  before per-corp tracking existed. Those rows carry no source, so no corp re-import can
+  retire them. Re-import each corp first (which adopts everyone still listed), then clear
+  the remainder.
+
+### Changed
+- A character that moves between two tracked corps is re-tagged to the new corp on import
+  instead of being duplicated, and re-importing the old corp no longer reports them as
+  departed.
+- Pilot map import logic moved out of the window into `Services/PilotMapImport.cs` so it
+  can be tested directly.
+
 ## v1.3 (2026-11-21)
 
 Window sizing release: the dashboard fits a larger roster.
